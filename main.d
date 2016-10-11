@@ -2,46 +2,49 @@ import std.stdio;
 import std.file;
 import std.string;
 import std.algorithm;
+import std.getopt;
 
 extern (C) int getch();
 extern (C) int kbhit();
 
-int parse_dir()
+int parse_dir(string src,string pattern,string root)
 {
 	string list[];
-
-	string root="c";
-	string src="g:\\mp3";
-	string pattern="*.mp3";
-	string outfolder="b:\\";
 
 	auto dFiles = dirEntries(src,pattern,SpanMode.depth);
 	foreach(d; dFiles){
 		string tmp;
+		int rlen;
 		tmp=d.name;
-		tmp=root~tmp[1..tmp.length];
+		rlen=root.length;
+		tmp=root~tmp[rlen..tmp.length];
 		list~=tmp;
-		writeln(tmp);
 	}
-	File file;
-	string ofname=outfolder~"out.txt";
-	file=File(ofname,"wb");
 	sort!("toUpper(a) < toUpper(b)", SwapStrategy.stable)(list);
 	foreach(s;list){
-		file.write(s~"\r\n");
+		writeln(s);
 	}
-	writeln("output file:"~ofname);
-	file.close;
 	return 0;
 }
 
 int main(string[] argv)
 {
-	try
-		parse_dir();
-	catch (Exception e) 
+	if(argv.length<=1){
+		writeln("--src c:\\stuff\\foo --pattern *.{mp3,ogg} --prefix c");
+		return 0;
+	}
+	try{
+		string src,pattern,prefix;
+		auto opt=getopt(
+			argv,
+			"src",&src,
+			"pattern",&pattern,
+			"prefix",&prefix,
+		);
+		parse_dir(src,pattern,prefix);
+	}
+	catch (Exception e){
 		writeln("error:"~e.msg);
-	writeln("done");
-	//getch();
+	}
     return 0;
 }
